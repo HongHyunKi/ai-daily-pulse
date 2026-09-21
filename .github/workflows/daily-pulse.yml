@@ -1,0 +1,28 @@
+name: Daily AI Pulse
+
+on:
+  push:
+    paths:
+      - 'reports/**.md'
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find latest report
+        id: latest
+        run: |
+          f=$(ls reports/*.md | sort | tail -1)
+          echo "file=$f" >> "$GITHUB_OUTPUT"
+          echo "Latest report: $f"
+
+      - name: Validate report
+        run: |
+          f="${{ steps.latest.outputs.file }}"
+          test -s "$f" || { echo "::error::$f is empty"; exit 1; }
+          grep -q '^# Daily AI Pulse:' "$f" || { echo "::error::missing title header in $f"; exit 1; }
+          echo "OK: $f validated"
+
+      # ponytail: 여기에 후속 처리(영상 대본/카드뉴스 재가공 등) 추가. 지금은 검증까지만.
